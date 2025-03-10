@@ -6,32 +6,22 @@
 module xo::xo;
 
 use sui::coin::{Self, TreasuryCap};
-
-const EAlreadyMinted: u64 = 0;
-/// Sender is not @0x0 the system address.
-const ENotSystemAddress: u64 = 1;
-
-#[allow(unused_const)]
-/// The amount of Motus per XO token based on the fact that motus is
-/// 10^-9 of a XO token
-const MOTUS_PER_XO: u64 = 1_000_000_000;
-
-#[allow(unused_const)]
-/// The total supply of XO denominated in whole XO tokens (5 Billion)
-const TOTAL_SUPPLY_XO: u64 = 5_000_000_000;
+use sui::dynamic_object_field as dof;
 
 /// The total supply of XO denominated in Motus (5 Billion * 10^9)
-const TOTAL_SUPPLY_MOTUS: u64 = 5_000_000_000_000_000_000;
+const TOTAL_SUPPLY_XO_WITH_DECIMALS: u64 = 5_000_000_000_000_000_000;
 
 /// Name of the coin
 public struct XO has drop {}
 
+public struct WrappedTreasury<phantom T> has key { id: UID,}
+
+/// Save the `TreasuryCap` as a DOF, to maintain discoverability.
+public struct TreasuryCapKey() has copy, store, drop;
+
 /// Register the `XO` Coin to acquire its `Supply`.
 /// This should be called only once during the deployment.
 fun init(otw: XO, ctx: &mut TxContext) {
-    assert!(ctx.sender() == @0x0, ENotSystemAddress);
-    assert!(ctx.epoch() == 0, EAlreadyMinted);
-
     let (treasury, metadata) = coin::create_currency(
         otw,
         9,
@@ -39,21 +29,36 @@ fun init(otw: XO, ctx: &mut TxContext) {
         b"Xociety Token",
         b"Base currency for the Xociety echo system", // description
         // url - will be changed later 
-        option::some(sui::url::new_unsafe(std::ascii::string(b"https://app.xociety.io/assets/ntx/obj-ntx.png"))),
+        option::some(sui::url::new_unsafe(std::ascii::string(b"https://app.xociety.io/assets/xo/xo-token.png"))),
         ctx,
     );
     transfer::public_freeze_object(metadata);
-    transfer::public_transfer(treasury, ctx.sender())
+    //transfer::public_transfer(treasury, ctx.sender())
+    
+    // mint all the tokens & freeze TreasuryCap
+    mint(&mut treasury, ctx.sender(), ctx);
+    wrap(treasury, ctx);
+}
+
+/// Wrap a `TreasuryCap<T>` in a `WrappedTreasury<T>` object.
+/// `WrappedTreasury<T>` must be shared.
+/// below function has to be executed fun init phase when contract deployed
+public(package) fun wrap<T>(treasury_cap: TreasuryCap<T>, ctx: &mut TxContext,) {
+  let mut id = object::new(ctx);
+  dof::add(&mut id, TreasuryCapKey(), treasury_cap);
+
+  let wrapped_treasury = WrappedTreasury<T> { id };
+  transfer::freeze_object(wrapped_treasury);  
 }
 
 // Create XO token using the TreasuryCap.
 // Will mint 5 billion - total supply - only once.
-public fun mint(
+public(package) fun mint(
     treasury_cap: &mut TreasuryCap<XO>,
     recipient: address,
     ctx: &mut TxContext,
 ) {
-    let coin = coin::mint(treasury_cap, TOTAL_SUPPLY_MOTUS, ctx);
+    let coin = coin::mint(treasury_cap, TOTAL_SUPPLY_XO_WITH_DECIMALS, ctx);
     transfer::public_transfer(coin, recipient)
 }
 
