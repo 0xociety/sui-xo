@@ -1,7 +1,7 @@
 // Copyright (c) Ndus Interactive, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// Coin<XO> is the xociety's token used to maintain echo-system on Sui blockchain.
+/// Coin<XO> is the xociety's token used to maintain eco-system on Sui blockchain.
 /// It has 9 decimals, and the smallest unit (10^-9) is called "motus".
 module xo::xo;
 
@@ -22,7 +22,7 @@ public struct TreasuryCapKey() has copy, store, drop;
 /// Register the `XO` Coin to acquire its `Supply`.
 /// This should be called only once during the deployment.
 fun init(otw: XO, ctx: &mut TxContext) {
-    let (treasury, metadata) = coin::create_currency(
+    let (mut treasury, metadata) = coin::create_currency(
         otw,
         9,
         b"XO",
@@ -33,17 +33,16 @@ fun init(otw: XO, ctx: &mut TxContext) {
         ctx,
     );
     transfer::public_freeze_object(metadata);
-    //transfer::public_transfer(treasury, ctx.sender())
     
     // mint all the tokens & freeze TreasuryCap
-    mint(&mut treasury, ctx.sender(), ctx);
-    wrap(treasury, ctx);
+    mint_and_transfer_to_sender(&mut treasury, ctx.sender(), ctx);
+    wrap_and_freeze_treasury(treasury, ctx);
 }
 
 /// Wrap a `TreasuryCap<T>` in a `WrappedTreasury<T>` object.
 /// `WrappedTreasury<T>` must be shared.
 /// below function has to be executed fun init phase when contract deployed
-public(package) fun wrap<T>(treasury_cap: TreasuryCap<T>, ctx: &mut TxContext,) {
+fun wrap_and_freeze_treasury<T>(treasury_cap: TreasuryCap<T>, ctx: &mut TxContext,) {
   let mut id = object::new(ctx);
   dof::add(&mut id, TreasuryCapKey(), treasury_cap);
 
@@ -53,7 +52,7 @@ public(package) fun wrap<T>(treasury_cap: TreasuryCap<T>, ctx: &mut TxContext,) 
 
 // Create XO token using the TreasuryCap.
 // Will mint 5 billion - total supply - only once.
-public(package) fun mint(
+fun mint_and_transfer_to_sender(
     treasury_cap: &mut TreasuryCap<XO>,
     recipient: address,
     ctx: &mut TxContext,
