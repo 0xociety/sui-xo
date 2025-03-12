@@ -28,8 +28,8 @@ fun init(otw: XO, ctx: &mut TxContext) {
         b"XO",
         b"Xociety Token",
         b"Base currency for the Xociety ecosystem", // description
-        // url - will be changed later 
-        option::some(sui::url::new_unsafe(std::ascii::string(b"https://app.xociety.io/assets/xo/xo-token.png"))),
+        // url
+        option::some(sui::url::new_unsafe(std::ascii::string(b"https://app.xociety.io/assets/xo/xo_token.png"))),
         ctx,
     );
     transfer::public_freeze_object(metadata);
