@@ -27,7 +27,7 @@ fun init(otw: XO, ctx: &mut TxContext) {
         9,
         b"XO",
         b"Xociety Token",
-        b"Base currency for the Xociety echo system", // description
+        b"Base currency for the Xociety eco-system", // description
         // url - will be changed later 
         option::some(sui::url::new_unsafe(std::ascii::string(b"https://app.xociety.io/assets/xo/xo-token.png"))),
         ctx,
