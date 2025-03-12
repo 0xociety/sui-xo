@@ -1,7 +1,7 @@
 // Copyright (c) Ndus Interactive, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// Coin<XO> is the xociety's token used to maintain eco-system on Sui blockchain.
+/// Coin<XO> is the xociety's token used to maintain ecosystem on Sui blockchain.
 /// It has 9 decimals, and the smallest unit (10^-9) is called "motus".
 module xo::xo;
 
@@ -27,7 +27,7 @@ fun init(otw: XO, ctx: &mut TxContext) {
         9,
         b"XO",
         b"Xociety Token",
-        b"Base currency for the Xociety eco-system", // description
+        b"Base currency for the Xociety ecosystem", // description
         // url - will be changed later 
         option::some(sui::url::new_unsafe(std::ascii::string(b"https://app.xociety.io/assets/xo/xo-token.png"))),
         ctx,
